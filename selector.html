@@ -129,6 +129,7 @@
     <textarea id="selectedBlocks" readonly></textarea><br>
     <button onclick="generateSummary()">Generar Resumen</button>
     <button onclick="confirmPreReserva()">Confirmar Pre-reserva</button>
+    <div id="preReservaMsg" style="display:none;margin:16px 0 0 0;padding:12px;background:#e3f2fd;color:#0a174e;border-radius:6px;text-align:center;font-size:1.08em;"></div>
     <button onclick="resetSelection()">Nueva Selección</button>
     <button onclick="sendWhatsApp()">Enviar por WhatsApp</button>
     <button onclick="window.location.href='mailto:contacto@acambaro.com.mx?subject=Solicitud%20de%20información%20de%20bloques%20Acambaro.com.mx'">Más detalles</button>
@@ -182,6 +183,15 @@
         });
       }
 
+      // Mensaje tras pre-reserva
+      window.confirmPreReserva = function() {
+        const msg = document.getElementById('preReservaMsg');
+        if (msg) {
+          msg.style.display = 'block';
+          msg.textContent = '¡Pre-reserva confirmada! A continuación, déjanos tus datos para comunicarnos contigo en las próximas 48 horas.';
+          msg.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+      }
       // Formulario de contacto/reserva
       const contactForm = document.getElementById('contactForm');
       const mensajeField = document.getElementById('mensaje');
