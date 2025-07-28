@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selector de bloques - Acambaro.com.mx</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #0a174e;
+      color: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+    }
+    .grid-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(102, 10px);
+      grid-template-rows: repeat(80, 10px);
+      gap: 2px;
+    }
+    .cell {
+      width: 10px;
+      height: 10px;
+      background-color: #fff;
+      border: 1px solid #333;
+      cursor: pointer;
+      transition: background 0.2s, border 0.2s;
+    }
+    .selected {
+      background-color: #00e676 !important; /* Verde alto contraste */
+      border: 1.5px solid #00c853;
+    }
+    .reserved {
+      background-color: #888;
+      border: 1.5px solid #aaa;
+      cursor: not-allowed;
+    }
+    .legend {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .legend span {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      margin-right: 5px;
+      border: 1px solid #333;
+    }
+    .legend span:nth-child(1) { background: #fff; border: 1px solid #333; }
+    .legend span:nth-child(2) { background: #00e676; border: 1px solid #00c853; }
+    .legend span:nth-child(3) { background: #888; border: 1px solid #aaa; }
+    .summary {
+      margin-top: 30px;
+      padding: 15px;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="number"] {
+      background: #fff;
+      color: #111;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      font-size: 1em;
+    }
+    textarea {
+      height: 120px;
+      margin-top: 10px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 10px;
+      margin-right: 10px;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .info-counts {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Selecciona tus bloques de 10x10 píxeles</h1>
+  <div style="max-width:600px;margin:0 auto 18px auto;padding:10px 18px 10px 18px;background:#232323;border-radius:8px;box-shadow:0 2px 8px #0002;">
+    <p style="font-size:1.08em;line-height:1.5;margin-bottom:10px;">
+      <strong>Cada bloque de 10x10 píxeles te permite seleccionar 100 píxeles cuadrados.</strong><br>
+      El costo es de <strong>$100 USD por bloque seleccionado</strong>.<br>
+      Indica cuántos bloques de 10x10 deseas solicitar para tu compra.
+    </p>
+    <form id="bloquesForm" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label for="numBloques" style="font-size:1.1em;min-width:220px;">Cantidad de bloques de 10x10:</label>
+      <input type="number" id="numBloques" name="numBloques" min="1" max="1000" value="1" style="width:80px;">
+      <button type="submit">Establecer límite</button>
+      <span id="bloquesMsg" style="color:#ffd600;"></span>
+    </form>
+    <div id="precioTotal" style="margin-top:8px;font-size:1.05em;color:#00e676;"></div>
+  </div>
+  <div class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="legend">
+    <p><span style="background:#ddd"></span>Disponible  <span style="background:#4caf50"></span>Seleccionado  <span style="background:#f44336"></span>Ocupado</p>
+  </div>
+  <div class="info-counts">
+    <p><strong>Disponibles:</strong> <span id="availableCount">0</span> bloques</p>
+  </div>
+  <div class="summary">
+    <h3>Resumen de Selección</h3>
+    <p><strong>Bloques seleccionados:</strong> <span id="blockCount">0</span></p>
+    <p><strong>Total de píxeles:</strong> <span id="pixelCount">0</span> px²</p>
+    <p><strong>Código de reservación:</strong> <span id="reservationCode">---</span></p>
+    <textarea id="selectedBlocks" readonly></textarea><br>
+    <button onclick="generateSummary()">Generar Resumen</button>
+    <button onclick="confirmPreReserva()">Confirmar Pre-reserva</button>
+    <button onclick="resetSelection()">Nueva Selección</button>
+    <button onclick="sendWhatsApp()">Enviar por WhatsApp</button>
+    <button onclick="window.location.href='mailto:contacto@acambaro.com.mx?subject=Solicitud%20de%20información%20de%20bloques%20Acambaro.com.mx'">Más detalles</button>
+    <form id="contactForm" style="margin-top:20px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee; max-width:400px; margin-left:auto; margin-right:auto;">
+      <h4>Contacto y reserva</h4>
+      <label for="nombre">Nombre completo:</label><br>
+      <input type="text" id="nombre" name="nombre" required style="width:100%;margin-bottom:2px;">
+      <small style="color:#333;display:block;margin-bottom:8px;">Ejemplo: Juan Pérez Ramírez</small>
+      <label for="correo">Correo electrónico:</label><br>
+      <input type="email" id="correo" name="correo" required style="width:100%;margin-bottom:2px;">
+      <small style="color:#333;display:block;margin-bottom:8px;">Ejemplo: juan@email.com</small>
+      <label for="telefono">Teléfono:</label><br>
+      <input type="tel" id="telefono" name="telefono" required style="width:100%;margin-bottom:2px;">
+      <small style="color:#333;display:block;margin-bottom:8px;">Incluye lada nacional. Ejemplo: 5551234567</small>
+      <label for="mensaje">Mensaje o comentarios:</label><br>
+      <textarea id="mensaje" name="mensaje" rows="3" style="width:100%;margin-bottom:2px;"></textarea>
+      <small style="color:#333;display:block;margin-bottom:8px;">¿Qué uso le darás a los bloques? ¿Tienes alguna duda o petición especial?</small>
+      <button type="submit">Enviar reserva y detalles</button>
+      <div id="contactoStatus" style="margin-top:8px;color:green;"></div>
+    </form>
+  </div>
+
+  <script src="selector.js"></script>
+  <script>
+    // Lógica para ajustar el máximo de bloques seleccionables y mostrar el precio total
+    document.addEventListener('DOMContentLoaded', function() {
+      // Límite de bloques y precio
+      const form = document.getElementById('bloquesForm');
+      const input = document.getElementById('numBloques');
+      const msg = document.getElementById('bloquesMsg');
+      const precio = document.getElementById('precioTotal');
+      function actualizarPrecio(n) {
+        precio.textContent = `Total: $${n * 100} USD por ${n} bloque(s)`;
+      }
+      if (form && input) {
+        actualizarPrecio(parseInt(input.value) || 1);
+        input.addEventListener('input', function() {
+          let n = parseInt(input.value);
+          if (isNaN(n) || n < 1) n = 1;
+          if (n > 1000) n = 1000;
+          actualizarPrecio(n);
+        });
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          let n = parseInt(input.value);
+          if (isNaN(n) || n < 1) n = 1;
+          if (n > 1000) n = 1000;
+          window.setMaxBlocks && window.setMaxBlocks(n);
+          msg.textContent = `Límite de selección: ${n} bloque(s)`;
+          actualizarPrecio(n);
+        });
+      }
+
+      // Formulario de contacto/reserva
+      const contactForm = document.getElementById('contactForm');
+      if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const nombre = document.getElementById('nombre').value;
+          const correo = document.getElementById('correo').value;
+          const telefono = document.getElementById('telefono').value;
+          const mensaje = document.getElementById('mensaje').value;
+          // Obtener resumen de selección
+          let resumen = '';
+          if (window.getSelectionSummary) {
+            resumen = window.getSelectionSummary();
+          } else {
+            resumen = '';
+          }
+          // Guardar en base de datos (ejemplo SheetDB, reemplazar URL)
+          try {
+            await fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_API', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                data: [{ nombre, correo, telefono, mensaje, resumen }]
+              })
+            });
+          } catch (err) {}
+          // Preparar correo con detalles
+          const body =
+            `Nombre: ${nombre}\nCorreo: ${correo}\nTeléfono: ${telefono}\nMensaje: ${mensaje}\n\nResumen de selección/reserva:\n${resumen}`;
+          const mailto = `mailto:contacto@acambaro.com.mx?subject=Reserva%20de%20bloques%20Acambaro.com.mx&body=${encodeURIComponent(body)}`;
+          window.location.href = mailto;
+          document.getElementById('contactoStatus').textContent = 'Datos enviados y abriendo tu cliente de correo...';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

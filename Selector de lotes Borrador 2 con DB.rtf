@@ -1,0 +1,304 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="es">\
+<head>\
+  <meta charset="UTF-8">\
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+  <title>Selector de bloques - Acambaro.com.mx</title>\
+  <style>\
+    body \{\
+      font-family: Arial, sans-serif;\
+      padding: 20px;\
+      background: #f5f5f5;\
+    \}\
+    h1 \{\
+      text-align: center;\
+    \}\
+    .grid-wrapper \{\
+      display: flex;\
+      justify-content: center;\
+      margin-bottom: 20px;\
+    \}\
+    .grid \{\
+      display: grid;\
+      grid-template-columns: repeat(102, 10px);\
+      grid-template-rows: repeat(80, 10px);\
+      gap: 2px;\
+    \}\
+    .cell \{\
+      width: 10px;\
+      height: 10px;\
+      background-color: #ddd;\
+      cursor: pointer;\
+    \}\
+    .selected \{\
+      background-color: #4caf50 !important;\
+    \}\
+    .reserved \{\
+      background-color: #f44336;\
+      cursor: not-allowed;\
+    \}\
+    .legend \{\
+      margin-top: 20px;\
+      text-align: center;\
+    \}\
+    .legend span \{\
+      display: inline-block;\
+      width: 15px;\
+      height: 15px;\
+      margin-right: 5px;\
+    \}\
+    .summary \{\
+      margin-top: 30px;\
+      padding: 15px;\
+      background: #ffffff;\
+      border: 1px solid #ccc;\
+      max-width: 600px;\
+      margin-left: auto;\
+      margin-right: auto;\
+    \}\
+    textarea \{\
+      width: 100%;\
+      height: 120px;\
+      margin-top: 10px;\
+    \}\
+    button \{\
+      margin-top: 10px;\
+      margin-right: 10px;\
+      padding: 10px 15px;\
+      font-size: 16px;\
+      cursor: pointer;\
+    \}\
+    .info-counts \{\
+      text-align: center;\
+      margin-top: 10px;\
+    \}\
+  </style>\
+</head>\
+<body>\
+  <h1>Selecciona tu bloque (10x10 px)</h1>\
+  <div class="grid-wrapper">\
+    <div class="grid" id="grid"></div>\
+  </div>\
+  <div class="legend">\
+    <p><span style="background:#ddd"></span>Disponible  <span style="background:#4caf50"></span>Seleccionado  <span style="background:#f44336"></span>Ocupado</p>\
+  </div>\
+  <div class="info-counts">\
+    <p><strong>Disponibles:</strong> <span id="availableCount">0</span> bloques</p>\
+  </div>\
+  <div class="summary">\
+    <h3>Resumen de Selecci\'f3n</h3>\
+    <p><strong>Bloques seleccionados:</strong> <span id="blockCount">0</span></p>\
+    <p><strong>Total de p\'edxeles:</strong> <span id="pixelCount">0</span> px\'b2</p>\
+    <p><strong>C\'f3digo de reservaci\'f3n:</strong> <span id="reservationCode">---</span></p>\
+    <textarea id="selectedBlocks" readonly></textarea><br>\
+    <button onclick="generateSummary()">Generar Resumen</button>\
+    <button onclick="confirmPreReserva()">Confirmar Pre-reserva</button>\
+    <button onclick="resetSelection()">Nueva Selecci\'f3n</button>\
+    <button onclick="sendWhatsApp()">Enviar por WhatsApp</button>\
+  </div>\
+\
+  <script>\
+    const grid = document.getElementById('grid');\
+    const totalRows = 80;\
+    const totalCols = 102;\
+    const reserved = new Set();\
+    const selected = new Set();\
+    const maxBlocks = 50;\
+\
+    function getColumnLabel(index) \{\
+      let label = '';\
+      while (index >= 0) \{\
+        label = String.fromCharCode((index % 26) + 65) + label;\
+        index = Math.floor(index / 26) - 1;\
+      \}\
+      return label;\
+    \}\
+\
+    function getIndexFromColumn(label) \{\
+      let index = 0;\
+      for (let i = 0; i < label.length; i++) \{\
+        index *= 26;\
+        index += label.charCodeAt(i) - 64;\
+      \}\
+      return index - 1;\
+    \}\
+\
+    function loadReservedBlocks() \{\
+      fetch("https://sheetdb.io/api/v1/wgbl7kd34rkmp")\
+        .then(response => response.json())\
+        .then(data => \{\
+          let totalReserved = 0;\
+          data.forEach(entry => \{\
+            if (entry.coordenadas) \{\
+              const coords = entry.coordenadas.split(', ');\
+              coords.forEach(coord => \{\
+                const match = coord.match(/([A-Z]+)([0-9]+)/);\
+                if (match) \{\
+                  const col = getIndexFromColumn(match[1]);\
+                  const row = parseInt(match[2]) - 1;\
+                  const cellId = `$\{row\}-$\{col\}`;\
+                  reserved.add(cellId);\
+                  totalReserved++;\
+                \}\
+              \});\
+            \}\
+          \});\
+          document.querySelectorAll('.cell').forEach(cell => \{\
+            const cellId = cell.dataset.id;\
+            if (reserved.has(cellId)) \{\
+              cell.classList.add('reserved');\
+              cell.classList.remove('selected');\
+            \}\
+          \});\
+          updateAvailableCount();\
+        \});\
+    \}\
+\
+    for (let row = 0; row < totalRows; row++) \{\
+      for (let col = 0; col < totalCols; col++) \{\
+        const cell = document.createElement('div');\
+        const cellId = `$\{row\}-$\{col\}`;\
+        cell.className = 'cell';\
+        cell.dataset.id = cellId;\
+        cell.addEventListener('click', function () \{\
+          if (cell.classList.contains('reserved')) return;\
+          if (!cell.classList.contains('selected') && selected.size >= maxBlocks) \{\
+            alert(`Solo puedes seleccionar hasta $\{maxBlocks\} bloques.`);\
+            return;\
+          \}\
+          cell.classList.toggle('selected');\
+          if (selected.has(cellId)) \{\
+            selected.delete(cellId);\
+          \} else \{\
+            selected.add(cellId);\
+          \}\
+          updateAvailableCount();\
+        \});\
+        grid.appendChild(cell);\
+      \}\
+    \}\
+\
+    function updateAvailableCount() \{\
+      const total = totalCols * totalRows;\
+      const disponibles = total - reserved.size - selected.size;\
+      document.getElementById('availableCount').textContent = disponibles;\
+    \}\
+\
+    function generateSummary() \{\
+      const blockCount = selected.size;\
+      if (blockCount === 0) \{\
+        alert("Selecciona al menos un bloque antes de generar el resumen.");\
+        return;\
+      \}\
+      const code = generateCode();\
+      const pixels = blockCount * 100;\
+      const coordinates = Array.from(selected).map(id => \{\
+        const [row, col] = id.split('-').map(Number);\
+        return `$\{getColumnLabel(col)\}$\{row + 1\}`;\
+      \});\
+      document.getElementById('blockCount').textContent = blockCount;\
+      document.getElementById('pixelCount').textContent = pixels;\
+      document.getElementById('reservationCode').textContent = code;\
+      document.getElementById('selectedBlocks').value = coordinates.join(', ');\
+    \}\
+\
+    function confirmPreReserva() \{\
+      const blockCount = selected.size;\
+      if (blockCount === 0) \{\
+        alert("Selecciona al menos un bloque antes de confirmar la pre-reserva.");\
+        return;\
+      \}\
+      const code = document.getElementById('reservationCode').textContent;\
+      const pixels = document.getElementById('pixelCount').textContent;\
+      const coordinates = document.getElementById('selectedBlocks').value.split(', ');\
+      saveToSheetDB(code, blockCount, pixels, coordinates);\
+      alert("\'a1Pre-reserva enviada correctamente!");\
+    \}\
+\
+    function generateCode() \{\
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';\
+      const numbers = '0123456789';\
+      let code = '';\
+      for (let i = 0; i < 3; i++) \{\
+        code += letters.charAt(Math.floor(Math.random() * letters.length));\
+      \}\
+      for (let i = 0; i < 3; i++) \{\
+        code += numbers.charAt(Math.floor(Math.random() * numbers.length));\
+      \}\
+      return code;\
+    \}\
+\
+    function resetSelection() \{\
+      selected.clear();\
+      document.querySelectorAll('.cell.selected').forEach(cell => cell.classList.remove('selected'));\
+      document.getElementById('blockCount').textContent = '0';\
+      document.getElementById('pixelCount').textContent = '0';\
+      document.getElementById('reservationCode').textContent = '---';\
+      document.getElementById('selectedBlocks').value = '';\
+      updateAvailableCount();\
+    \}\
+\
+    function sendWhatsApp() \{\
+      const blockCount = selected.size;\
+      if (blockCount === 0) \{\
+        alert("Selecciona al menos un bloque antes de enviar por WhatsApp.");\
+        return;\
+      \}\
+      const code = document.getElementById('reservationCode').textContent;\
+      const blocks = document.getElementById('selectedBlocks').value;\
+      const pixels = document.getElementById('pixelCount').textContent;\
+      const message = `Hola, quiero reservar los siguientes bloques en Acambaro.com.mx:\\n\\nBloques seleccionados: $\{blockCount\}\\nTotal de p\'edxeles: $\{pixels\}\\nC\'f3digo de reservaci\'f3n: $\{code\}\\nCoordenadas: $\{blocks\}`;\
+      const url = `https://wa.me/?text=$\{encodeURIComponent(message)\}`;\
+      window.open(url, '_blank');\
+    \}\
+\
+    function saveToSheetDB(code, blockCount, pixels, coordinates) \{\
+      const payload = \{\
+        data: \{\
+          codigo: code,\
+          coordenadas: coordinates.join(', '),\
+          pixeles: pixels,\
+          fecha: new Date().toISOString()\
+        \}\
+      \};\
+\
+      fetch("https://sheetdb.io/api/v1/wgbl7kd34rkmp", \{\
+        method: "POST",\
+        headers: \{ "Content-Type": "application/json" \},\
+        body: JSON.stringify(payload)\
+      \}).then(response => \{\
+        if (!response.ok) \{\
+          alert("Hubo un problema al guardar la reserva en la nube.");\
+        \} else \{\
+          // Actualiza las celdas como reservadas\
+          coordinates.forEach(coord => \{\
+            const match = coord.match(/([A-Z]+)([0-9]+)/);\
+            if (match) \{\
+              const col = getIndexFromColumn(match[1]);\
+              const row = parseInt(match[2]) - 1;\
+              const cellId = `$\{row\}-$\{col\}`;\
+              reserved.add(cellId);\
+              const cell = document.querySelector(`[data-id='$\{cellId\}']`);\
+              if (cell) \{\
+                cell.classList.add('reserved');\
+                cell.classList.remove('selected');\
+              \}\
+            \}\
+          \});\
+          resetSelection();\
+        \}\
+      \});\
+    \}\
+\
+    loadReservedBlocks();\
+  </script>\
+</body>\
+</html>\
+}
