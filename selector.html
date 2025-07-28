@@ -112,6 +112,9 @@
   <div class="grid-wrapper">
     <div class="grid" id="grid"></div>
   </div>
+  <div id="resumenSeleccion" style="max-width:600px;margin:18px auto 0 auto;padding:12px 18px;background:#fff;color:#111;border-radius:8px;box-shadow:0 2px 8px #0001;text-align:center;font-size:1.1em;display:none;">
+    <span id="resumenBloques"></span>
+  </div>
   <div class="legend">
     <p><span style="background:#ddd"></span>Disponible  <span style="background:#4caf50"></span>Seleccionado  <span style="background:#f44336"></span>Ocupado</p>
   </div>
@@ -213,6 +216,23 @@
           document.getElementById('contactoStatus').textContent = 'Datos enviados y abriendo tu cliente de correo...';
         });
       }
+      // Mostrar resumen de bloques seleccionados y costo
+      function actualizarResumenSeleccion() {
+        const blockCount = document.getElementById('blockCount');
+        const resumenDiv = document.getElementById('resumenSeleccion');
+        const resumenBloques = document.getElementById('resumenBloques');
+        let n = parseInt(blockCount?.textContent || '0');
+        if (n > 0) {
+          resumenDiv.style.display = 'block';
+          resumenBloques.textContent = `Has seleccionado ${n} bloque(s) de 10x10 píxeles. Costo total: $${n * 100} USD`;
+        } else {
+          resumenDiv.style.display = 'none';
+        }
+      }
+      // Actualizar resumen cuando cambie la selección
+      const observer = new MutationObserver(actualizarResumenSeleccion);
+      observer.observe(document.getElementById('blockCount'), { childList: true });
+      actualizarResumenSeleccion();
     });
   </script>
 </body>
