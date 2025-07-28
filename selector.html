@@ -98,7 +98,7 @@
   <div style="max-width:600px;margin:0 auto 18px auto;padding:10px 18px 10px 18px;background:#232323;border-radius:8px;box-shadow:0 2px 8px #0002;">
     <p style="font-size:1.08em;line-height:1.5;margin-bottom:10px;">
       <strong>Cada bloque de 10x10 píxeles te permite seleccionar 100 píxeles cuadrados.</strong><br>
-      El costo es de <strong>$100 USD por bloque seleccionado</strong>.<br>
+      El costo es de <strong>$99.99 USD por bloque seleccionado</strong>.<br>
       Indica cuántos bloques de 10x10 deseas solicitar para tu compra.
     </p>
     <form id="bloquesForm" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -162,7 +162,7 @@
       const msg = document.getElementById('bloquesMsg');
       const precio = document.getElementById('precioTotal');
       function actualizarPrecio(n) {
-        precio.textContent = `Total: $${n * 100} USD por ${n} bloque(s)`;
+        precio.textContent = `Total: $${(n * 99.99).toFixed(2)} USD por ${n} bloque(s)`;
       }
       if (form && input) {
         actualizarPrecio(parseInt(input.value) || 1);
@@ -208,7 +208,7 @@
         let n = parseInt(blockCount?.textContent || '0');
         if (n > 0) {
           if (!ultimoCodigoReserva) ultimoCodigoReserva = generarCodigoReserva();
-          return `Reserva de ${n} bloque(s) de 10x10 píxeles. Costo total: $${n * 100} USD.\nCódigo de reservación: ${ultimoCodigoReserva}`;
+          return `Reserva de ${n} bloque(s) de 10x10 píxeles. Costo total: $${(n * 99.99).toFixed(2)} USD.\nCódigo de reservación: ${ultimoCodigoReserva}`;
         } else {
           ultimoCodigoReserva = '';
           return '';
@@ -267,7 +267,7 @@
         let n = parseInt(blockCount?.textContent || '0');
         if (n > 0) {
           resumenDiv.style.display = 'block';
-          resumenBloques.textContent = `Has seleccionado ${n} bloque(s) de 10x10 píxeles. Costo total: $${n * 100} USD`;
+          resumenBloques.textContent = `Has seleccionado ${n} bloque(s) de 10x10 píxeles. Costo total: $${(n * 99.99).toFixed(2)} USD`;
         } else {
           resumenDiv.style.display = 'none';
         }
