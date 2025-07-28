@@ -145,7 +145,7 @@
       <small style="color:#333;display:block;margin-bottom:8px;">Incluye lada nacional. Ejemplo: 5551234567</small>
       <label for="mensaje">Mensaje o comentarios:</label><br>
       <textarea id="mensaje" name="mensaje" rows="3" style="width:100%;margin-bottom:2px;"></textarea>
-      <small style="color:#333;display:block;margin-bottom:8px;">¿Qué uso le darás a los bloques? ¿Tienes alguna duda o petición especial?</small>
+      <small style="color:#333;display:block;margin-bottom:8px;">¿Qué uso le darás a los bloques? ¿Tienes alguna duda o petición especial? El resumen de tu reserva se agregará automáticamente.</small>
       <button type="submit">Enviar reserva y detalles</button>
       <div id="contactoStatus" style="margin-top:8px;color:green;"></div>
     </form>
@@ -184,6 +184,44 @@
 
       // Formulario de contacto/reserva
       const contactForm = document.getElementById('contactForm');
+      const mensajeField = document.getElementById('mensaje');
+      function generarCodigoReserva() {
+        const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let code = '';
+        for (let i = 0; i < 3; i++) code += letras.charAt(Math.floor(Math.random() * letras.length));
+        for (let i = 0; i < 3; i++) code += Math.floor(Math.random() * 10);
+        return code;
+      }
+      let ultimoCodigoReserva = '';
+      function getResumenReserva() {
+        const blockCount = document.getElementById('blockCount');
+        let n = parseInt(blockCount?.textContent || '0');
+        if (n > 0) {
+          if (!ultimoCodigoReserva) ultimoCodigoReserva = generarCodigoReserva();
+          return `Reserva de ${n} bloque(s) de 10x10 píxeles. Costo total: $${n * 100} USD.\nCódigo de reservación: ${ultimoCodigoReserva}`;
+        } else {
+          ultimoCodigoReserva = '';
+          return '';
+        }
+      }
+      function prellenarMensaje() {
+        const resumen = getResumenReserva();
+        if (mensajeField && resumen) {
+          mensajeField.value = resumen;
+        }
+      }
+      // Prellenar al abrir el formulario y al cambiar la selección
+      document.getElementById('blockCount').addEventListener('DOMSubtreeModified', function() {
+        ultimoCodigoReserva = '';
+        prellenarMensaje();
+        // Mostrar código en el resumen visual
+        const resumenDiv = document.getElementById('resumenSeleccion');
+        const resumenBloques = document.getElementById('resumenBloques');
+        if (resumenDiv && resumenBloques && ultimoCodigoReserva) {
+          resumenBloques.textContent += `\nCódigo de reservación: ${ultimoCodigoReserva}`;
+        }
+      });
+      prellenarMensaje();
       if (contactForm) {
         contactForm.addEventListener('submit', async function(e) {
           e.preventDefault();
@@ -192,19 +230,14 @@
           const telefono = document.getElementById('telefono').value;
           const mensaje = document.getElementById('mensaje').value;
           // Obtener resumen de selección
-          let resumen = '';
-          if (window.getSelectionSummary) {
-            resumen = window.getSelectionSummary();
-          } else {
-            resumen = '';
-          }
+          let resumen = getResumenReserva();
           // Guardar en base de datos (ejemplo SheetDB, reemplazar URL)
           try {
             await fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_API', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                data: [{ nombre, correo, telefono, mensaje, resumen }]
+                data: [{ nombre, correo, telefono, mensaje, resumen, codigo: ultimoCodigoReserva }]
               })
             });
           } catch (err) {}
